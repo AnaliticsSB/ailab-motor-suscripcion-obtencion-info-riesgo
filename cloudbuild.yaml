@@ -1,0 +1,61 @@
+# Define variables que se pueden configurar en cada ejecución del trigger.
+# El prefijo '_' es una convención para las variables definidas por el usuario.
+substitutions:
+  _REGION: 'us-east1'
+  _ARTIFACT_REPO: 'repo-ailab-motor-suscripcion-obtencion-info-riesgo'
+  _IMAGE_NAME: 'ailab-motor-suscripcion-obtencion-info-riesgo'
+  _SERVICE_NAME: 'ailab-motor-suscripcion-obtencion-info-riesgo'
+  _SERVICE_ACCOUNT: 'sb-xops-stage@sb-xops-stage.iam.gserviceaccount.com'
+  _ENV: 'stage'
+
+steps:
+  # 1. Crear el repositorio de Artifact Registry si no existe.
+  # Este paso es idempotente: si ya existe, no hace nada.
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud artifacts repositories describe ${_ARTIFACT_REPO} --location=${_REGION} || \
+        gcloud artifacts repositories create ${_ARTIFACT_REPO} \
+          --repository-format="DOCKER" \
+          --location="${_REGION}" \
+          --description="Repo para la API que identifica los riesgos de un caso filenet del motor de suscripción"
+
+  # 2. Construir la imagen de Docker y subirla a Artifact Registry.
+  # Usamos la variable $SHORT_SHA para un versionado único en lugar de 'latest'.
+  # El campo 'images' construye y hace push automáticamente.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Image'
+    args:
+      - 'build'
+      - '--tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:${SHORT_SHA}'
+      - '--tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:latest'
+      - '.'
+    
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Image to Artifact Registry'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}'
+
+  # 3. Desplegar la nueva imagen en Cloud Run.
+  # Se usa el tag único ($SHORT_SHA) para asegurar que se despliega la versión correcta.
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Deploy to Cloud Run'
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:${SHORT_SHA}'
+      - '--region=${_REGION}'
+      - '--service-account=${_SERVICE_ACCOUNT}'
+      - '--platform=managed'
+      - '--labels=billing-tags=api_motor_suscripcion,area=sist_desc,env=${_ENV},project=${_IMAGE_NAME}'
+      - '--quiet' # Opción para evitar la confirmación interactiva.
+
+
+# Configuración de logging estándar
+options:
+  logging: CLOUD_LOGGING_ONLY

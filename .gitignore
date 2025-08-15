@@ -1,0 +1,20 @@
+# Entornos virtuales de Python
+venv/
+*.pyc
+__pycache__/
+
+# Archivos de configuración local y credenciales
+creds.txt
+*.local
+
+# Documentos y datos sensibles
+*.xlsx
+*.pdf
+*.csv
+
+# Archivos de prueba locales
+prueba_obtencion_info_riesgo.py
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db

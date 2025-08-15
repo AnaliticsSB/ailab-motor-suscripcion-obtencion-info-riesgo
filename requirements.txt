@@ -1,0 +1,24 @@
+# Main dependencies
+fastapi==0.111.1
+uvicorn==0.23.2
+gunicorn
+pydantic==2.8.2
+
+# Database dependencies
+sqlalchemy[asyncio]
+pg8000
+cloud-sql-python-connector[asyncpg]
+
+# Google Cloud dependencies
+google-cloud-secret-manager==2.19.0
+google-auth==2.27.0
+google-auth-oauthlib
+google-cloud-aiplatform>=1.64.0
+google-cloud-storage>=2.10.0
+
+# Data processing dependencies
+pandas==2.2.3
+openpyxl>=3.1.2
+XlsxWriter>=3.1.9
+
+datetime==5.5
