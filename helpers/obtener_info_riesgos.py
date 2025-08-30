@@ -125,7 +125,7 @@ async def _procesar_con_gemini(
         vertexai.init(project='sb-xops-stage', location="us-central1") 
         
         # Carga el modelo generativo especificado.
-        model = GenerativeModel("gemini-1.5-pro-001")
+        model = GenerativeModel("gemini-2.5-pro")
 
         # Lee todas las hojas del archivo Excel en un diccionario de DataFrames.
         dict_de_dfs = pd.read_excel(io.BytesIO(excel_bytes), sheet_name=None)
