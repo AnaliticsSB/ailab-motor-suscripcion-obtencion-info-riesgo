@@ -74,21 +74,20 @@ async def create_db_engine_async():
     #    internamente cada vez que necesite crear una nueva conexión a la base de datos.
     async def getconn():
         # Se utiliza el conector para establecer una conexión segura y asíncrona.
-        conn = await connector.connect_async(
+        return await connector.connect_async(
             INSTANCE_CONNECTION_NAME,
-            "asyncpg",  # Se especifica el driver de base de datos asíncrono.
+            driver="asyncpg",  # Se especifica el driver de base de datos asíncrono.
             user=DB_USER,
             password=DB_PASS,
             db=DB_NAME,
             ip_type=IPTypes.PUBLIC  # Se especifica el tipo de IP a usar para la conexión.
         )
-        return conn
 
     # 5. Se crea el motor (engine) de SQLAlchemy, que gestiona el pool de conexiones.
     #    Se le pasa la función 'getconn' para que sepa cómo crear conexiones.
     engine = create_async_engine(
         "postgresql+asyncpg://",
-        creator=getconn
+        async_creator=getconn
     )
     
     # 6. Se realiza una conexión de prueba para validar que la configuración es correcta.
